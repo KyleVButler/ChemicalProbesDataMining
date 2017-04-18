@@ -51,6 +51,7 @@ if(require("pathview")){
 probe_list <- read_csv("PROBELIST.csv")
 
 reactome_probe_network <- function(pathway_name, data = probe_list){
+  if(is.character(pathway_name) == FALSE) stop("Pathway name is not a character.")
   gene_names <- unique(data$ENTREZ_GENE)
   gene_names <- as.character(na.omit(gene_names))
   mygeneList <- rep(100, length(gene_names))
@@ -62,10 +63,11 @@ reactome_probe_network <- function(pathway_name, data = probe_list){
 }
 #Regulation of TP53 Activity through Methylation
 #png("tp53.png", width = 2000, height = 2000, res = 300)
-#reactome_probe_network()
+#reactome_probe_network("Regulation of TP53 Activity through Methylation")
 #dev.off()
 
 kegg_probe_network <- function(pathway_name, data = probe_list){
+  if(is.character(pathway_name) == FALSE) stop("Pathway name is not a character.")
   gene_names <- as.numeric(unique(data$ENTREZ_GENE))
   gene_names <- as.character(na.omit(gene_names))
   #keggview.native(gene.data = gene_names, res = 300, pathway.name = pathway_name, species = "hsa", col.key = FALSE)
@@ -92,19 +94,20 @@ highlight_nodes_cytoscape <- function(border_width = 6, data = probe_list){
 
 network_table <- read_csv("network_table.csv")
 #plot_probe_target_network("P45973", 0.5)
-plot_probe_target_network <- function(target, cutoff, data = probe_list, network_table_temp = network_table){
+plot_probe_target_network <- function(target, cutoff = 0.4, data = probe_list, network_table_temp = network_table){
   ####
   ####add a stopifnot here for target and cutoff
   ####
 
   #----------------------------------------------
   #get first and second degree connections to target, find all probes, and all nodes that connect target to probe
-
+  if(is.character(target) == FALSE) stop("Target name is not a character.")
   network_table_temp <- filter(network_table_temp, confidenceScore >= cutoff)
   probe_genes <- as.character(unique(data$UNIPROTKB))
   #target_connections <- network_table_temp[apply(network_table_temp, 1, FUN = 
   #                                 function(x, y = target) {any(grepl(y, x, ignore.case = TRUE))}), ]
   target_connections <- network_table_temp[network_table_temp$A == target | network_table_temp$B == target, ]
+  if(nrow(target_connections) == 0) stop("Target not found.")
   target_primary <- unique(c(target_connections$A, target_connections$B))
   target_connections <- network_table_temp[network_table_temp$A %in% target_primary | network_table_temp$B %in% target_primary, ]
   relevant_probes <- probe_genes[probe_genes %in% unique(c(target_connections$A, target_connections$B))]
